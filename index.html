@@ -196,6 +196,18 @@
     .gallery-grid{grid-template-columns:repeat(2,1fr);grid-auto-rows:160px;}
   }
 
+  .testimonials{background:var(--ink);}
+  .testimonial-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:56px;}
+  .t-card{background:var(--panel);border:1px solid var(--line);padding:32px 28px;display:flex;flex-direction:column;}
+  .t-quote{font-size:15px;line-height:1.7;color:#d4d4cd;flex:1;}
+  .t-quote::before{content:'"';color:var(--lime);font-family:'Anton',sans-serif;font-size:32px;line-height:0;display:block;margin-bottom:6px;}
+  .t-author{margin-top:22px;padding-top:18px;border-top:1px solid var(--line);}
+  .t-author b{display:block;font-family:'Anton',sans-serif;font-size:16px;text-transform:uppercase;color:var(--paper);}
+  .t-author span{font-size:12px;color:#8c8c86;text-transform:uppercase;letter-spacing:0.05em;}
+  @media(max-width:860px){
+    .testimonial-grid{grid-template-columns:1fr;}
+  }
+
   /* CTA footer band */
   .cta-band{
     background:var(--lime);color:var(--ink);text-align:center;
@@ -230,6 +242,7 @@
       <a href="#programme">1-2-1 Programme</a>
       <a href="#sunday">Sunday Service</a>
       <a href="#credentials">Coach</a>
+      <a href="#testimonials">Testimonials</a>
       <a href="#contact">Contact</a>
     </div>
     <a href="#contact" class="nav-cta">Book Now</a>
@@ -381,6 +394,29 @@
       <img class="tall" src="assets/portrait.jpg" alt="Maestro player portrait in full kit">
       <img src="assets/dribble.jpg" alt="Maestro player dribbling under pressure">
       <img src="assets/wave.jpg" alt="Maestro player smiling on the pitch">
+    </div>
+  </div>
+</section>
+
+<section class="testimonials" id="testimonials">
+  <div class="wrap">
+    <span class="section-tag">Parents On Maestro</span>
+    <h2 class="display section-title">Real progress, tracked against real goals.</h2>
+    <p class="section-lede">Every programme starts by working backwards from where a player wants to get to. Here's what that's looked like for a few of our families.</p>
+
+    <div class="testimonial-grid">
+      <div class="t-card">
+        <p class="t-quote">We sat down at the start and talked through exactly where he was at, his position, and what we wanted to see by the end of the season. Every single session since has clearly been built around that — nothing generic, nothing wasted. The improvement in his decision-making on the ball in just a few months has been the biggest change we've seen from any coaching he's had.</p>
+        <div class="t-author"><b>Glenn</b><span>Parent of a Maestro player</span></div>
+      </div>
+      <div class="t-card">
+        <p class="t-quote">What stood out to us was the level of detail — his position, his specific weaknesses, the targets we agreed on together, all of it clearly feeding into what he actually does in each session. It doesn't feel like a standard drill night. It feels planned around him specifically, and the progress over a few months has genuinely surprised us.</p>
+        <div class="t-author"><b>Mark</b><span>Parent of a Maestro player</span></div>
+      </div>
+      <div class="t-card">
+        <p class="t-quote">The goals we set at the start weren't vague — and neither was the plan to get there. Every session works back from those targets, so nothing feels like it's just filling time. A few months in, the difference in his confidence and ability in his position is obvious, not just to us but to his own team coach.</p>
+        <div class="t-author"><b>Chase</b><span>Parent of a Maestro player</span></div>
+      </div>
     </div>
   </div>
 </section>
