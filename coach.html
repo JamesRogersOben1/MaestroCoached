@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coach Entry — MAESTRO</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0a0a0a; --panel:#141414; --panel-2:#1c1c1c; --paper:#f2f1ea;
+    --lime:#ccff33; --red:#ff4433; --line:#2c2c2c;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--ink);color:var(--paper);font-family:'Inter',sans-serif;min-height:100vh;}
+  .display{font-family:'Anton',sans-serif;text-transform:uppercase;}
+  .wrap{max-width:560px;margin:0 auto;padding:0 20px;}
+  header{padding:24px 0;border-bottom:1px solid var(--line);}
+  .logo{font-family:'Anton',sans-serif;font-size:20px;}
+  .logo span{color:var(--lime);}
+
+  .login-box{max-width:380px;margin:80px auto;padding:0 20px;text-align:center;}
+  .login-box h1{font-size:26px;margin-bottom:12px;}
+  .login-box p{color:#b7b7b0;font-size:14px;margin-bottom:24px;line-height:1.6;}
+
+  .form-area{display:none;padding:36px 0 80px;}
+  label{display:block;font-size:12px;color:#8c8c86;text-transform:uppercase;letter-spacing:0.04em;margin:18px 0 6px;}
+  label:first-child{margin-top:0;}
+  input, select, textarea{
+    width:100%;padding:12px 14px;background:var(--panel);border:1px solid var(--line);
+    color:var(--paper);border-radius:4px;font-size:14px;font-family:inherit;
+  }
+  input:focus, select:focus, textarea:focus{outline:none;border-color:var(--lime);}
+  textarea{min-height:80px;resize:vertical;}
+  button{
+    width:100%;padding:14px;background:var(--lime);color:var(--ink);border:none;border-radius:4px;
+    font-weight:800;font-size:14px;text-transform:uppercase;letter-spacing:0.03em;cursor:pointer;
+    font-family:inherit;margin-top:24px;
+  }
+  button:hover{opacity:0.9;}
+  button:disabled{opacity:0.5;}
+  .status-msg{margin-top:14px;font-size:13px;color:var(--lime);}
+  .error-msg{margin-top:14px;font-size:13px;color:var(--red);}
+
+  .ratings-block{background:var(--panel);border-radius:8px;padding:16px 18px;margin-top:20px;}
+  .ratings-block p.hint{font-size:12px;color:#8c8c86;margin-bottom:12px;line-height:1.5;}
+  .rating-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;}
+  .rating-row:last-child{margin-bottom:0;}
+  .rating-row label{margin:0;font-size:13px;color:var(--paper);text-transform:none;letter-spacing:0;flex:1;}
+  .rating-row input{width:70px;text-align:center;}
+
+  .logout{font-size:12px;color:#8c8c86;text-decoration:underline;cursor:pointer;background:none;width:auto;padding:0;margin:0;text-transform:none;font-weight:400;float:right;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap"><div class="logo">M<span>A</span>ESTRO — Coach Entry <button class="logout" id="logoutBtn" style="display:none;">Sign out</button></div></div>
+</header>
+
+<div class="login-box" id="loginBox">
+  <h1 class="display">Coach<br>login.</h1>
+  <p>Enter your email to get a secure login link.</p>
+  <input type="email" id="emailInput" placeholder="you@email.com" style="margin-bottom:12px;">
+  <button id="sendLinkBtn" style="margin-top:0;">Send me a login link</button>
+  <div id="loginStatus"></div>
+</div>
+
+<div class="form-area wrap" id="formArea">
+  <h1 class="display" style="font-size:24px;margin-bottom:4px;">Log a session</h1>
+  <p style="font-size:13px;color:#8c8c86;">Fill this in after a session — takes under a minute.</p>
+
+  <label for="playerSelect">Player</label>
+  <select id="playerSelect"></select>
+
+  <label for="sessionDate">Session date</label>
+  <input type="date" id="sessionDate">
+
+  <label for="notesInput">Session notes (what the parent sees)</label>
+  <textarea id="notesInput" placeholder="e.g. Sharper first touch under pressure. Working on scanning before receiving."></textarea>
+
+  <label for="clipInput">Clip link (optional)</label>
+  <input type="url" id="clipInput" placeholder="https://...">
+
+  <div class="ratings-block">
+    <p class="hint">Only fill in the categories you're formally scoring this session — leave the rest blank. Full rubric review every 3rd session; quick notes are fine in between.</p>
+    <div class="rating-row"><label>First Touch</label><input type="number" min="1" max="10" id="r_ft"></div>
+    <div class="rating-row"><label>Decision Making</label><input type="number" min="1" max="10" id="r_dm"></div>
+    <div class="rating-row"><label>Passing</label><input type="number" min="1" max="10" id="r_pass"></div>
+    <div class="rating-row"><label>Physicality</label><input type="number" min="1" max="10" id="r_phys"></div>
+    <div class="rating-row"><label>Attitude & Coachability</label><input type="number" min="1" max="10" id="r_att"></div>
+  </div>
+
+  <button id="submitBtn">Save session</button>
+  <div id="saveStatus"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+const SUPABASE_URL = "https://wswqbmgzhostkquztdpj.supabase.co";
+const SUPABASE_KEY = "sb_publishable_dqElO37xH5wQbc3EtYnHSA_dHAF_58k";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const loginBox = document.getElementById('loginBox');
+const formArea = document.getElementById('formArea');
+const logoutBtn = document.getElementById('logoutBtn');
+
+document.getElementById('sendLinkBtn').addEventListener('click', async () => {
+  const email = document.getElementById('emailInput').value.trim();
+  const statusEl = document.getElementById('loginStatus');
+  if (!email) { statusEl.innerHTML = '<div class="error-msg">Enter your email first.</div>'; return; }
+  document.getElementById('sendLinkBtn').disabled = true;
+  const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: window.location.href } });
+  if (error) {
+    statusEl.innerHTML = '<div class="error-msg">' + error.message + '</div>';
+    document.getElementById('sendLinkBtn').disabled = false;
+  } else {
+    statusEl.innerHTML = '<div class="status-msg">Check your email for a login link.</div>';
+  }
+});
+
+logoutBtn.addEventListener('click', async () => { await sb.auth.signOut(); window.location.reload(); });
+
+sb.auth.onAuthStateChange((event, session) => {
+  if (session) { showForm(); } else { loginBox.style.display = 'block'; formArea.style.display = 'none'; logoutBtn.style.display = 'none'; }
+});
+
+async function showForm(){
+  loginBox.style.display = 'none';
+  formArea.style.display = 'block';
+  logoutBtn.style.display = 'inline';
+
+  const { data: players, error } = await sb.from('players').select('*').order('name');
+  const select = document.getElementById('playerSelect');
+  if (error || !players || players.length === 0){
+    select.innerHTML = '<option>No players found — add one in Supabase first</option>';
+    return;
+  }
+  select.innerHTML = players.map(p => '<option value="'+p.id+'">'+p.name+'</option>').join('');
+  document.getElementById('sessionDate').valueAsDate = new Date();
+}
+
+document.getElementById('submitBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('submitBtn');
+  const statusEl = document.getElementById('saveStatus');
+  btn.disabled = true;
+  statusEl.innerHTML = '';
+
+  const playerId = document.getElementById('playerSelect').value;
+  const date = document.getElementById('sessionDate').value;
+  const notes = document.getElementById('notesInput').value.trim();
+  const clip = document.getElementById('clipInput').value.trim();
+
+  if (!playerId || !date){
+    statusEl.innerHTML = '<div class="error-msg">Pick a player and date first.</div>';
+    btn.disabled = false;
+    return;
+  }
+
+  const { data: existing } = await sb.from('sessions').select('session_number').eq('player_id', playerId).order('session_number', { ascending: false }).limit(1);
+  const nextNumber = existing && existing.length > 0 ? existing[0].session_number + 1 : 1;
+
+  const { data: newSession, error: sessErr } = await sb.from('sessions').insert({
+    player_id: playerId, session_number: nextNumber, session_date: date,
+    notes: notes || null, clip_url: clip || null
+  }).select().single();
+
+  if (sessErr){
+    statusEl.innerHTML = '<div class="error-msg">' + sessErr.message + '</div>';
+    btn.disabled = false;
+    return;
+  }
+
+  const ratingInputs = [
+    ['First Touch', 'r_ft'], ['Decision Making', 'r_dm'], ['Passing', 'r_pass'],
+    ['Physicality', 'r_phys'], ['Attitude & Coachability', 'r_att']
+  ];
+  const ratingsToInsert = ratingInputs
+    .map(([category, id]) => ({ category, value: document.getElementById(id).value }))
+    .filter(r => r.value !== '')
+    .map(r => ({ session_id: newSession.id, category: r.category, score: parseInt(r.value, 10) }));
+
+  if (ratingsToInsert.length > 0){
+    const { error: ratingErr } = await sb.from('ratings').insert(ratingsToInsert);
+    if (ratingErr){
+      statusEl.innerHTML = '<div class="error-msg">Session saved, but ratings failed: ' + ratingErr.message + '</div>';
+      btn.disabled = false;
+      return;
+    }
+  }
+
+  statusEl.innerHTML = '<div class="status-msg">Session ' + nextNumber + ' saved.</div>';
+  document.getElementById('notesInput').value = '';
+  document.getElementById('clipInput').value = '';
+  ratingInputs.forEach(([, id]) => document.getElementById(id).value = '');
+  btn.disabled = false;
+});
+
+sb.auth.getSession().then(({ data: { session } }) => { if (session) showForm(); });
+</script>
+
+</body>
+</html>
