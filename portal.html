@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Parent Portal — MAESTRO</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+  :root{
+    --ink:#0a0a0a; --panel:#141414; --panel-2:#1c1c1c; --paper:#f2f1ea;
+    --lime:#ccff33; --red:#ff4433; --line:#2c2c2c;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--ink);color:var(--paper);font-family:'Inter',sans-serif;min-height:100vh;}
+  .display{font-family:'Anton',sans-serif;text-transform:uppercase;letter-spacing:0.01em;}
+  a{color:inherit;}
+  .wrap{max-width:760px;margin:0 auto;padding:0 20px;}
+  header{padding:24px 0;border-bottom:1px solid var(--line);}
+  .logo{font-family:'Anton',sans-serif;font-size:20px;}
+  .logo span{color:var(--lime);}
+
+  /* login screen */
+  .login-box{max-width:400px;margin:80px auto;padding:0 20px;text-align:center;}
+  .login-box h1{font-size:28px;margin-bottom:12px;}
+  .login-box p{color:#b7b7b0;font-size:14px;margin-bottom:28px;line-height:1.6;}
+  input[type=email]{
+    width:100%;padding:14px 16px;background:var(--panel);border:1px solid var(--line);
+    color:var(--paper);border-radius:4px;font-size:15px;margin-bottom:14px;font-family:inherit;
+  }
+  input[type=email]:focus{outline:none;border-color:var(--lime);}
+  button{
+    width:100%;padding:14px;background:var(--lime);color:var(--ink);border:none;border-radius:4px;
+    font-weight:800;font-size:14px;text-transform:uppercase;letter-spacing:0.03em;cursor:pointer;font-family:inherit;
+  }
+  button:hover{opacity:0.9;}
+  button:disabled{opacity:0.5;cursor:default;}
+  .status-msg{margin-top:16px;font-size:13px;color:var(--lime);}
+  .error-msg{margin-top:16px;font-size:13px;color:var(--red);}
+
+  /* dashboard */
+  .dash{display:none;padding:40px 0 80px;}
+  .player-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:12px;}
+  .player-id{display:flex;align-items:center;gap:14px;}
+  .avatar{width:48px;height:48px;border-radius:50%;background:var(--panel-2);border:2px solid var(--lime);display:flex;align-items:center;justify-content:center;font-family:'Anton',sans-serif;color:var(--lime);}
+  .player-id b{display:block;font-size:17px;}
+  .player-id span{font-size:12px;color:#8c8c86;text-transform:uppercase;letter-spacing:0.05em;}
+  .logout{font-size:12px;color:#8c8c86;text-decoration:underline;cursor:pointer;background:none;width:auto;padding:0;text-transform:none;font-weight:400;}
+
+  .info-box{background:var(--panel);border-radius:8px;padding:16px 18px;margin-bottom:24px;}
+  .info-box p{font-size:13px;color:#b7b7b0;line-height:1.6;}
+  .info-box b{color:var(--lime);}
+
+  .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:28px;}
+  .stat-card{background:var(--panel);border-radius:8px;padding:16px;}
+  .stat-card .label{font-size:12px;color:#8c8c86;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;}
+  .stat-card .value{font-family:'Anton',sans-serif;font-size:22px;}
+
+  .section-label{font-size:13px;color:#8c8c86;text-transform:uppercase;letter-spacing:0.05em;margin:0 0 12px;font-weight:600;}
+  .legend{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:8px;font-size:12px;color:#b7b7b0;}
+  .legend span{display:flex;align-items:center;gap:5px;}
+  .dot{width:9px;height:9px;border-radius:2px;display:inline-block;}
+
+  .session-card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px 18px;margin-bottom:10px;}
+  .session-card .top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;}
+  .session-card .top b{font-size:14px;}
+  .session-card p{font-size:13px;color:#b7b7b0;line-height:1.6;}
+  .session-card a{font-size:13px;color:var(--lime);text-decoration:none;}
+
+  .empty{text-align:center;padding:60px 20px;color:#8c8c86;font-size:14px;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap"><div class="logo">M<span>A</span>ESTRO — Parent Portal</div></div>
+</header>
+
+<div class="login-box" id="loginBox">
+  <h1 class="display">Track the<br>progress.</h1>
+  <p>Enter the email you gave your coach and we'll send you a secure link — no password needed.</p>
+  <input type="email" id="emailInput" placeholder="parent@email.com" autocomplete="email">
+  <button id="sendLinkBtn">Send me a login link</button>
+  <div id="loginStatus"></div>
+</div>
+
+<div class="dash wrap" id="dash">
+  <div class="player-head">
+    <div class="player-id">
+      <div class="avatar" id="avatarInitials">--</div>
+      <div>
+        <b id="playerName">Loading...</b>
+        <span id="playerProgramme"></span>
+      </div>
+    </div>
+    <button class="logout" id="logoutBtn">Sign out</button>
+  </div>
+
+  <div class="info-box">
+    <p><b>How ratings are scored:</b> each session, your coach rates five areas 1–10 against a fixed rubric, relative to your child's age and stage — full scoring every 3rd session. This is coach judgement applied consistently, not an automated score.</p>
+  </div>
+
+  <div class="stat-grid" id="statGrid"></div>
+
+  <p class="section-label">Skill progress across sessions</p>
+  <div class="legend" id="chartLegend"></div>
+  <div style="position:relative;width:100%;height:220px;margin-bottom:32px;">
+    <canvas id="progressChart"></canvas>
+  </div>
+
+  <p class="section-label">Session history</p>
+  <div id="sessionList"></div>
+  <div class="empty" id="emptyState" style="display:none;">No sessions logged yet — check back after the first session.</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const SUPABASE_URL = "https://wswqbmgzhostkquztdpj.supabase.co";
+const SUPABASE_KEY = "sb_publishable_dqElO37xH5wQbc3EtYnHSA_dHAF_58k";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const CATEGORY_COLORS = {
+  "First Touch": "#2a78d6",
+  "Decision Making": "#eb6834",
+  "Passing": "#1baf7a",
+  "Physicality": "#eda100",
+  "Attitude & Coachability": "#e87ba4"
+};
+
+const loginBox = document.getElementById('loginBox');
+const dash = document.getElementById('dash');
+const loginStatus = document.getElementById('loginStatus');
+
+document.getElementById('sendLinkBtn').addEventListener('click', async () => {
+  const email = document.getElementById('emailInput').value.trim();
+  if (!email) { loginStatus.innerHTML = '<div class="error-msg">Enter your email first.</div>'; return; }
+  document.getElementById('sendLinkBtn').disabled = true;
+  const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: window.location.href } });
+  if (error) {
+    loginStatus.innerHTML = '<div class="error-msg">' + error.message + '</div>';
+    document.getElementById('sendLinkBtn').disabled = false;
+  } else {
+    loginStatus.innerHTML = '<div class="status-msg">Check your email for a login link.</div>';
+  }
+});
+
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  await sb.auth.signOut();
+  window.location.reload();
+});
+
+sb.auth.onAuthStateChange((event, session) => {
+  if (session) { showDashboard(); } else { loginBox.style.display = 'block'; dash.style.display = 'none'; }
+});
+
+async function showDashboard(){
+  loginBox.style.display = 'none';
+  dash.style.display = 'block';
+
+  const { data: players, error: pErr } = await sb.from('players').select('*');
+  if (pErr || !players || players.length === 0){
+    document.getElementById('playerName').textContent = 'No player linked to this email yet';
+    document.getElementById('emptyState').style.display = 'block';
+    return;
+  }
+
+  const player = players[0];
+  document.getElementById('playerName').textContent = player.name;
+  document.getElementById('playerProgramme').textContent = player.programme || 'MAESTRO Programme';
+  document.getElementById('avatarInitials').textContent = player.name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+
+  const { data: sessions } = await sb.from('sessions').select('*').eq('player_id', player.id).order('session_number', { ascending: true });
+
+  if (!sessions || sessions.length === 0){
+    document.getElementById('emptyState').style.display = 'block';
+    document.getElementById('statGrid').innerHTML = statCard('Sessions completed','0') + statCard('Status','Getting started');
+    return;
+  }
+
+  document.getElementById('statGrid').innerHTML =
+    statCard('Sessions completed', sessions.length) +
+    statCard('Latest session', sessions[sessions.length-1].session_date);
+
+  const sessionIds = sessions.map(s => s.id);
+  const { data: ratings } = await sb.from('ratings').select('*').in('session_id', sessionIds);
+
+  const byCategory = {};
+  (ratings || []).forEach(r => {
+    if (!byCategory[r.category]) byCategory[r.category] = {};
+    const sess = sessions.find(s => s.id === r.session_id);
+    if (sess) byCategory[r.category][sess.session_number] = r.score;
+  });
+
+  const labels = sessions.map(s => 'S' + s.session_number);
+  const datasets = Object.keys(byCategory).map(cat => ({
+    label: cat,
+    data: sessions.map(s => byCategory[cat][s.session_number] ?? null),
+    borderColor: CATEGORY_COLORS[cat] || '#888',
+    backgroundColor: 'transparent',
+    borderWidth: 2, pointRadius: 3, tension: 0.3, spanGaps: true
+  }));
+
+  document.getElementById('chartLegend').innerHTML = Object.keys(byCategory).map(cat =>
+    '<span><span class="dot" style="background:' + (CATEGORY_COLORS[cat]||'#888') + '"></span>' + cat + '</span>'
+  ).join('');
+
+  if (window.progressChartInstance) window.progressChartInstance.destroy();
+  const ctx = document.getElementById('progressChart');
+  window.progressChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { min: 0, max: 10, ticks: { stepSize: 2, color: '#8c8c86' }, grid: { color: '#2c2c2c' } },
+        x: { ticks: { color: '#8c8c86' }, grid: { display: false } }
+      }
+    }
+  });
+
+  document.getElementById('sessionList').innerHTML = sessions.slice().reverse().map(s =>
+    '<div class="session-card"><div class="top"><b>Session ' + s.session_number + ' — ' + s.session_date + '</b>' +
+    (s.clip_url ? '<a href="'+s.clip_url+'" target="_blank" rel="noopener">Watch clip</a>' : '') +
+    '</div><p>' + (s.notes || '') + '</p></div>'
+  ).join('');
+}
+
+function statCard(label, value){
+  return '<div class="stat-card"><div class="label">'+label+'</div><div class="value">'+value+'</div></div>';
+}
+
+sb.auth.getSession().then(({ data: { session } }) => { if (session) showDashboard(); });
+</script>
+
+</body>
+</html>
