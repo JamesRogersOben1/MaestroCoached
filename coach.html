@@ -74,6 +74,21 @@
   <label for="playerSelect">Player</label>
   <select id="playerSelect"></select>
 
+  <div id="blockPanel" style="display:none;background:var(--panel);border-radius:8px;padding:16px 18px;margin-top:14px;">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;">
+      <span style="font-size:12px;color:#8c8c86;text-transform:uppercase;letter-spacing:0.04em;">Current block</span>
+      <span id="blockCount" style="font-family:'Anton',sans-serif;font-size:16px;"></span>
+    </div>
+    <div style="background:var(--line);border-radius:4px;height:8px;overflow:hidden;margin-bottom:10px;">
+      <div id="blockBar" style="background:var(--lime);height:100%;width:0%;transition:width .2s;"></div>
+    </div>
+    <div id="renewalAlert" style="display:none;background:rgba(255,68,51,0.12);border:1px solid var(--red);border-radius:6px;padding:10px 12px;margin-bottom:10px;font-size:13px;color:var(--paper);"></div>
+    <div style="display:flex;gap:8px;">
+      <a id="renewalMailBtn" style="flex:1;text-align:center;padding:9px;border:1px solid var(--line);border-radius:4px;font-size:12px;text-decoration:none;color:var(--paper);text-transform:uppercase;letter-spacing:0.03em;">Send renewal email</a>
+      <button type="button" id="startNewBlockBtn" style="flex:1;background:var(--panel-2);color:var(--paper);border:1px solid var(--line);margin:0;padding:9px;font-size:12px;">Start new block</button>
+    </div>
+  </div>
+
   <label for="sessionDate">Session date</label>
   <input type="date" id="sessionDate">
 
@@ -137,9 +152,64 @@ async function showForm(){
     select.innerHTML = '<option>No players found — add one in Supabase first</option>';
     return;
   }
+  window.allPlayers = players;
   select.innerHTML = players.map(p => '<option value="'+p.id+'">'+p.name+'</option>').join('');
   document.getElementById('sessionDate').valueAsDate = new Date();
+  await updateBlockPanel();
 }
+
+document.getElementById('playerSelect').addEventListener('change', updateBlockPanel);
+
+async function updateBlockPanel(){
+  const playerId = document.getElementById('playerSelect').value;
+  const panel = document.getElementById('blockPanel');
+  if (!playerId || !window.allPlayers) { panel.style.display = 'none'; return; }
+  const player = window.allPlayers.find(p => p.id === playerId);
+  if (!player) { panel.style.display = 'none'; return; }
+
+  const blockSize = player.block_size || 12;
+  const blockStart = player.block_start_session || 1;
+
+  const { data: latest } = await sb.from('sessions').select('session_number').eq('player_id', playerId).order('session_number', { ascending: false }).limit(1);
+  const latestNum = latest && latest.length > 0 ? latest[0].session_number : 0;
+  const usedInBlock = Math.max(0, latestNum - blockStart + 1);
+  const displayCount = Math.min(usedInBlock, blockSize);
+  const pct = Math.min(100, Math.round((displayCount / blockSize) * 100));
+
+  panel.style.display = 'block';
+  document.getElementById('blockCount').textContent = displayCount + ' / ' + blockSize;
+  document.getElementById('blockBar').style.width = pct + '%';
+
+  const alertBox = document.getElementById('renewalAlert');
+  const mailBtn = document.getElementById('renewalMailBtn');
+  if (displayCount >= blockSize - 2){
+    alertBox.style.display = 'block';
+    alertBox.textContent = displayCount >= blockSize
+      ? 'This block is complete — time to renew.'
+      : 'Nearing the end of this block (' + displayCount + '/' + blockSize + ') — worth prompting renewal now.';
+    const subject = encodeURIComponent('Time to renew — ' + player.name + "'s MAESTRO sessions");
+    const body = encodeURIComponent('Hi,\n\n' + player.name + ' is coming to the end of their current block of ' + blockSize + ' sessions ('+displayCount+'/'+blockSize+' completed). Really pleased with the progress so far.\n\nWould you like to renew for another block? Happy to run through how things have gone and what we\'d focus on next.\n\nBest,\nMAESTRO');
+    mailBtn.href = 'mailto:' + (player.parent_email || '') + '?subject=' + subject + '&body=' + body;
+  } else {
+    alertBox.style.display = 'none';
+  }
+}
+
+document.getElementById('startNewBlockBtn').addEventListener('click', async () => {
+  const playerId = document.getElementById('playerSelect').value;
+  if (!playerId || !window.allPlayers) return;
+  const player = window.allPlayers.find(p => p.id === playerId);
+  if (!confirm('Start a new block of ' + (player.block_size || 12) + ' for ' + player.name + '? This resets the progress count from the next session logged.')) return;
+
+  const { data: latest } = await sb.from('sessions').select('session_number').eq('player_id', playerId).order('session_number', { ascending: false }).limit(1);
+  const latestNum = latest && latest.length > 0 ? latest[0].session_number : 0;
+
+  const { error } = await sb.from('players').update({ block_start_session: latestNum + 1 }).eq('id', playerId);
+  if (!error){
+    player.block_start_session = latestNum + 1;
+    await updateBlockPanel();
+  }
+});
 
 document.getElementById('submitBtn').addEventListener('click', async () => {
   const btn = document.getElementById('submitBtn');
