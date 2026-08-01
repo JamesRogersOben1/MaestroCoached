@@ -69,17 +69,32 @@
     <label for="playerName">Player's name</label>
     <input type="text" id="playerName" placeholder="Full name">
 
+    <label for="dobInput">Player's date of birth</label>
+    <input type="text" id="dobInput" placeholder="DD/MM/YYYY">
+
+    <label for="ageGroupInput">Player's age group</label>
+    <input type="text" id="ageGroupInput" placeholder="e.g. U12, U14, U16">
+
+    <label for="emergencyContactName">Emergency contact name</label>
+    <input type="text" id="emergencyContactName" placeholder="Full name">
+
+    <label for="contactNumber">Emergency contact number</label>
+    <input type="tel" id="contactNumber" placeholder="07...">
+
     <label for="parentEmail">Parent/guardian email</label>
     <input type="email" id="parentEmail" placeholder="you@email.com">
 
-    <label for="contactNumber">Contact number</label>
-    <input type="tel" id="contactNumber" placeholder="07...">
+    <label for="medicalInput">Any medical information we need to know about</label>
+    <textarea id="medicalInput" placeholder="Allergies, conditions, or write 'None'"></textarea>
 
-    <label for="experienceInput">Player's current experience</label>
+    <label for="experienceInput">Additional information (player position/experience etc.)</label>
     <textarea id="experienceInput" placeholder="e.g. Plays for a local grassroots team, midfielder, 3 years playing"></textarea>
 
-    <label for="goalsInput">What are you hoping to get out of sessions?</label>
+    <label for="goalsInput">What areas of the player's game need improving?</label>
     <textarea id="goalsInput" placeholder="e.g. Improve first touch and confidence in 1v1 situations ahead of trials"></textarea>
+
+    <label for="additionalNotesInput">Additional thoughts, questions or requests</label>
+    <textarea id="additionalNotesInput" placeholder="Optional"></textarea>
 
     <div class="consent-row required">
       <input type="checkbox" id="generalConsent">
@@ -113,10 +128,15 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
   statusEl.innerHTML = '';
 
   const name = document.getElementById('playerName').value.trim();
+  const dob = document.getElementById('dobInput').value.trim();
+  const ageGroup = document.getElementById('ageGroupInput').value.trim();
+  const emergencyContactName = document.getElementById('emergencyContactName').value.trim();
   const parentEmail = document.getElementById('parentEmail').value.trim();
   const contactNumber = document.getElementById('contactNumber').value.trim();
+  const medical = document.getElementById('medicalInput').value.trim();
   const experience = document.getElementById('experienceInput').value.trim();
   const goals = document.getElementById('goalsInput').value.trim();
+  const additionalNotes = document.getElementById('additionalNotesInput').value.trim();
   const generalConsent = document.getElementById('generalConsent').checked;
   const imageConsent = document.getElementById('imageConsent').checked;
 
@@ -131,9 +151,23 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
 
   btn.disabled = true;
 
+  // Convert DD/MM/YYYY to YYYY-MM-DD for the database, if a valid date was entered
+  let dobFormatted = null;
+  if (dob){
+    const parts = dob.split(/[\/\-\.]/);
+    if (parts.length === 3){
+      const [d, m, y] = parts;
+      if (d && m && y && y.length === 4) dobFormatted = y + '-' + m.padStart(2,'0') + '-' + d.padStart(2,'0');
+    }
+  }
+
   const { error } = await sb.from('players').insert({
     name, parent_email: parentEmail, contact_number: contactNumber || null,
+    date_of_birth: dobFormatted, age_group: ageGroup || null,
+    emergency_contact_name: emergencyContactName || null,
+    medical_notes: medical || null,
     player_experience: experience || null, player_goals: goals || null,
+    additional_notes: additionalNotes || null,
     general_consent: generalConsent, image_rights_consent: imageConsent
   });
 
