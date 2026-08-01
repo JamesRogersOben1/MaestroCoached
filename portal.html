@@ -137,7 +137,7 @@ document.getElementById('sendLinkBtn').addEventListener('click', async () => {
   const email = document.getElementById('emailInput').value.trim();
   if (!email) { loginStatus.innerHTML = '<div class="error-msg">Enter your email first.</div>'; return; }
   document.getElementById('sendLinkBtn').disabled = true;
-  const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: window.location.href } });
+  const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: "https://maestrocoaching.net/portal.html" } });
   if (error) {
     loginStatus.innerHTML = '<div class="error-msg">' + error.message + '</div>';
     document.getElementById('sendLinkBtn').disabled = false;

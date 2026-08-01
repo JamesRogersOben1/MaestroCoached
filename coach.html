@@ -111,7 +111,7 @@ document.getElementById('sendLinkBtn').addEventListener('click', async () => {
   const statusEl = document.getElementById('loginStatus');
   if (!email) { statusEl.innerHTML = '<div class="error-msg">Enter your email first.</div>'; return; }
   document.getElementById('sendLinkBtn').disabled = true;
-  const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: window.location.href } });
+  const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: "https://maestrocoaching.net/coach.html" } });
   if (error) {
     statusEl.innerHTML = '<div class="error-msg">' + error.message + '</div>';
     document.getElementById('sendLinkBtn').disabled = false;
