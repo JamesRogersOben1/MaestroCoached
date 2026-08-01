@@ -74,6 +74,8 @@
   <label for="playerSelect">Player</label>
   <select id="playerSelect"></select>
 
+  <div id="consentStatus" style="display:none;font-size:12px;padding:8px 12px;border-radius:4px;margin-top:8px;"></div>
+
   <div id="blockPanel" style="display:none;background:var(--panel);border-radius:8px;padding:16px 18px;margin-top:14px;">
     <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;">
       <span style="font-size:12px;color:#8c8c86;text-transform:uppercase;letter-spacing:0.04em;">Current block</span>
@@ -163,9 +165,21 @@ document.getElementById('playerSelect').addEventListener('change', updateBlockPa
 async function updateBlockPanel(){
   const playerId = document.getElementById('playerSelect').value;
   const panel = document.getElementById('blockPanel');
-  if (!playerId || !window.allPlayers) { panel.style.display = 'none'; return; }
+  const consentEl = document.getElementById('consentStatus');
+  if (!playerId || !window.allPlayers) { panel.style.display = 'none'; consentEl.style.display = 'none'; return; }
   const player = window.allPlayers.find(p => p.id === playerId);
-  if (!player) { panel.style.display = 'none'; return; }
+  if (!player) { panel.style.display = 'none'; consentEl.style.display = 'none'; return; }
+
+  consentEl.style.display = 'block';
+  if (player.image_rights_consent === true){
+    consentEl.style.background = 'rgba(204,255,51,0.12)';
+    consentEl.style.border = '1px solid var(--lime)';
+    consentEl.textContent = 'Image/video consent on file — clips OK to attach';
+  } else {
+    consentEl.style.background = 'rgba(255,68,51,0.12)';
+    consentEl.style.border = '1px solid var(--red)';
+    consentEl.textContent = 'No image/video consent on file — you\'ll be asked to confirm before attaching a clip';
+  }
 
   const blockSize = player.block_size || 12;
   const blockStart = player.block_start_session || 1;
@@ -226,6 +240,23 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
     statusEl.innerHTML = '<div class="error-msg">Pick a player and date first.</div>';
     btn.disabled = false;
     return;
+  }
+
+  if (clip){
+    const player = window.allPlayers ? window.allPlayers.find(p => p.id === playerId) : null;
+    const hasConsent = player && player.image_rights_consent === true;
+    if (!hasConsent){
+      const proceed = confirm(
+        (player ? player.name : 'This player') + "'s parent has not confirmed image/video consent on file.\n\n" +
+        "Attaching a clip means it will be visible to the parent (and could be shared further by them).\n\n" +
+        "Click OK to attach it anyway, or Cancel to remove the clip link and save without it."
+      );
+      if (!proceed){
+        statusEl.innerHTML = '<div class="error-msg">Remove the clip link (or confirm consent in Supabase) before saving.</div>';
+        btn.disabled = false;
+        return;
+      }
+    }
   }
 
   const { data: existing } = await sb.from('sessions').select('session_number').eq('player_id', playerId).order('session_number', { ascending: false }).limit(1);
