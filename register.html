@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Player Registration — MAESTRO</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0a0a0a; --panel:#141414; --panel-2:#1c1c1c; --paper:#f2f1ea;
+    --lime:#ccff33; --red:#ff4433; --line:#2c2c2c;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--ink);color:var(--paper);font-family:'Inter',sans-serif;min-height:100vh;}
+  .display{font-family:'Anton',sans-serif;text-transform:uppercase;}
+  .wrap{max-width:560px;margin:0 auto;padding:0 20px;}
+  header{padding:24px 0;border-bottom:1px solid var(--line);}
+  .logo{font-family:'Anton',sans-serif;font-size:20px;}
+  .logo span{color:var(--lime);}
+
+  .form-area{padding:36px 0 80px;}
+  .form-area h1{font-size:26px;margin-bottom:8px;}
+  .form-area > .wrap > p{color:#b7b7b0;font-size:14px;margin-bottom:28px;line-height:1.6;}
+
+  label{display:block;font-size:12px;color:#8c8c86;text-transform:uppercase;letter-spacing:0.04em;margin:18px 0 6px;}
+  label:first-of-type{margin-top:0;}
+  input[type=text], input[type=tel], input[type=email], textarea{
+    width:100%;padding:12px 14px;background:var(--panel);border:1px solid var(--line);
+    color:var(--paper);border-radius:4px;font-size:14px;font-family:inherit;
+  }
+  input:focus, textarea:focus{outline:none;border-color:var(--lime);}
+  textarea{min-height:80px;resize:vertical;}
+
+  .consent-row{
+    display:flex;align-items:flex-start;gap:10px;background:var(--panel);border-radius:8px;
+    padding:14px 16px;margin-top:16px;
+  }
+  .consent-row input[type=checkbox]{width:18px;height:18px;margin-top:2px;flex-shrink:0;}
+  .consent-row p{font-size:13px;color:#c9c9c2;line-height:1.6;}
+  .consent-row.required{border:1px solid var(--line);}
+
+  button{
+    width:100%;padding:14px;background:var(--lime);color:var(--ink);border:none;border-radius:4px;
+    font-weight:800;font-size:14px;text-transform:uppercase;letter-spacing:0.03em;cursor:pointer;
+    font-family:inherit;margin-top:28px;
+  }
+  button:hover{opacity:0.9;}
+  button:disabled{opacity:0.5;}
+  .status-msg{margin-top:14px;font-size:13px;color:var(--lime);text-align:center;}
+  .error-msg{margin-top:14px;font-size:13px;color:var(--red);}
+  .success-box{display:none;text-align:center;padding:60px 20px;}
+  .success-box h2{font-size:26px;margin-bottom:12px;}
+  .success-box p{color:#b7b7b0;font-size:14px;line-height:1.6;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap"><div class="logo">M<span>A</span>ESTRO — Player Registration</div></div>
+</header>
+
+<div class="form-area">
+  <div class="wrap" id="formWrap">
+    <h1 class="display">Get<br>started.</h1>
+    <p>Tell us about your child and we'll be in touch to arrange their first session.</p>
+
+    <label for="playerName">Player's name</label>
+    <input type="text" id="playerName" placeholder="Full name">
+
+    <label for="parentEmail">Parent/guardian email</label>
+    <input type="email" id="parentEmail" placeholder="you@email.com">
+
+    <label for="contactNumber">Contact number</label>
+    <input type="tel" id="contactNumber" placeholder="07...">
+
+    <label for="experienceInput">Player's current experience</label>
+    <textarea id="experienceInput" placeholder="e.g. Plays for a local grassroots team, midfielder, 3 years playing"></textarea>
+
+    <label for="goalsInput">What are you hoping to get out of sessions?</label>
+    <textarea id="goalsInput" placeholder="e.g. Improve first touch and confidence in 1v1 situations ahead of trials"></textarea>
+
+    <div class="consent-row required">
+      <input type="checkbox" id="generalConsent">
+      <p>I consent to my child taking part in MAESTRO coaching sessions, and to being contacted regarding bookings and progress updates.</p>
+    </div>
+
+    <div class="consent-row">
+      <input type="checkbox" id="imageConsent">
+      <p>I consent to photos/video of my child being used for coaching feedback purposes and, separately, for MAESTRO's marketing and social media. (Optional — coaching can still go ahead if this isn't ticked.)</p>
+    </div>
+
+    <button id="submitBtn">Submit registration</button>
+    <div id="formStatus"></div>
+  </div>
+
+  <div class="success-box" id="successBox">
+    <h2 class="display">Thanks!</h2>
+    <p>We've got your details — we'll be in touch shortly to arrange your child's first session.</p>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+const SUPABASE_URL = "https://wswqbmgzhostkquztdpj.supabase.co";
+const SUPABASE_KEY = "sb_publishable_dqElO37xH5wQbc3EtYnHSA_dHAF_58k";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+document.getElementById('submitBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('submitBtn');
+  const statusEl = document.getElementById('formStatus');
+  statusEl.innerHTML = '';
+
+  const name = document.getElementById('playerName').value.trim();
+  const parentEmail = document.getElementById('parentEmail').value.trim();
+  const contactNumber = document.getElementById('contactNumber').value.trim();
+  const experience = document.getElementById('experienceInput').value.trim();
+  const goals = document.getElementById('goalsInput').value.trim();
+  const generalConsent = document.getElementById('generalConsent').checked;
+  const imageConsent = document.getElementById('imageConsent').checked;
+
+  if (!name || !parentEmail){
+    statusEl.innerHTML = '<div class="error-msg">Player name and parent email are required.</div>';
+    return;
+  }
+  if (!generalConsent){
+    statusEl.innerHTML = '<div class="error-msg">General consent is required to register.</div>';
+    return;
+  }
+
+  btn.disabled = true;
+
+  const { error } = await sb.from('players').insert({
+    name, parent_email: parentEmail, contact_number: contactNumber || null,
+    player_experience: experience || null, player_goals: goals || null,
+    general_consent: generalConsent, image_rights_consent: imageConsent
+  });
+
+  if (error){
+    statusEl.innerHTML = '<div class="error-msg">' + error.message + '</div>';
+    btn.disabled = false;
+    return;
+  }
+
+  document.getElementById('formWrap').style.display = 'none';
+  document.getElementById('successBox').style.display = 'block';
+});
+</script>
+
+</body>
+</html>
