@@ -208,7 +208,9 @@
     width:100%;aspect-ratio:1/1;border-radius:50%;background:var(--panel-2);
     display:flex;align-items:center;justify-content:center;border:2px solid var(--lime);
     font-family:'Anton',sans-serif;font-size:56px;color:var(--lime);
+    overflow:hidden;
   }
+  .specialist-avatar img{width:100%;height:100%;object-fit:cover;object-position:center 20%;}
   .specialist-role{color:var(--lime);font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;}
   .specialist-name{font-family:'Anton',sans-serif;font-size:30px;text-transform:uppercase;margin-bottom:16px;}
   .specialist-bio p{color:#c9c9c2;font-size:15px;line-height:1.75;margin-bottom:14px;}
@@ -408,7 +410,7 @@
     <p class="section-lede">Outfield coaching is only half the picture — our goalkeepers train under a dedicated specialist with real academy and professional-level experience.</p>
 
     <div class="specialist-card">
-      <div class="specialist-avatar">CM</div>
+      <div class="specialist-avatar"><img src="assets/gk-training.jpg" alt="Goalkeeper Specialist Chris Mensah"></div>
       <div>
         <div class="specialist-role">Goalkeeper Specialist</div>
         <div class="specialist-name">Chris Mensah</div>
@@ -418,8 +420,6 @@
         </div>
       </div>
     </div>
-
-    <img src="assets/gk-training.jpg" alt="Young goalkeeper training with agility hurdles" style="width:100%;max-width:500px;display:block;margin:24px auto 0;border-radius:8px;filter:grayscale(0.1) contrast(1.05);">
   </div>
 </section>
 
