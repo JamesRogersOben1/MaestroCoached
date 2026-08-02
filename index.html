@@ -162,7 +162,18 @@
   .group-meta{display:flex;gap:36px;margin-top:24px;flex-wrap:wrap;}
   .group-meta div b{display:block;font-family:'Anton',sans-serif;font-size:20px;}
   .group-meta div span{font-size:12px;text-transform:uppercase;letter-spacing:0.06em;opacity:0.75;}
+  .camps{background:var(--panel);}
   .group-band .btn-primary{background:var(--ink);color:var(--lime);}
+  .camp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:56px;}
+  .camp-card{background:var(--panel-2);border:1px solid var(--line);padding:30px 26px;}
+  .camp-card .month{font-family:'Anton',sans-serif;font-size:14px;color:var(--red);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px;}
+  .camp-card h3{font-family:'Anton',sans-serif;font-size:26px;text-transform:uppercase;margin-bottom:16px;}
+  .camp-card .detail{display:flex;justify-content:space-between;padding:9px 0;border-top:1px solid var(--line);font-size:14px;color:#c9c9c2;}
+  .camp-card .detail:first-of-type{border-top:none;}
+  .camp-card .detail b{color:var(--paper);}
+  @media(max-width:860px){
+    .camp-grid{grid-template-columns:1fr;}
+  }
 
   .whatsapp-fab{
     position:fixed;bottom:26px;right:26px;z-index:60;
@@ -380,6 +391,35 @@
       </div>
     </div>
     <a href="#contact" class="btn btn-primary">Reserve Your Spot</a>
+  </div>
+</section>
+
+<section class="camps">
+  <div class="wrap">
+    <span class="section-tag">2026 Holiday Camps</span>
+    <h2 class="display section-title">School holidays, spent improving.</h2>
+    <p class="section-lede">Multi-day camps at Shepherd's Bush, built for players who want to keep progressing over the school holidays.</p>
+
+    <div class="camp-grid">
+      <div class="camp-card">
+        <div class="month">October Half Term</div>
+        <h3>14–18 Oct</h3>
+        <div class="detail"><span>Time</span><b>10:00am – 1:00pm</b></div>
+        <div class="detail"><span>Venue</span><b>Shepherd's Bush</b></div>
+      </div>
+      <div class="camp-card">
+        <div class="month">November Break</div>
+        <h3>26–29 Nov</h3>
+        <div class="detail"><span>Time</span><b>10:00am – 1:00pm</b></div>
+        <div class="detail"><span>Venue</span><b>Shepherd's Bush</b></div>
+      </div>
+      <div class="camp-card">
+        <div class="month">December Break</div>
+        <h3>17–20 Dec</h3>
+        <div class="detail"><span>Time</span><b>10:00am – 1:00pm</b></div>
+        <div class="detail"><span>Venue</span><b>Shepherd's Bush</b></div>
+      </div>
+    </div>
   </div>
 </section>
 
