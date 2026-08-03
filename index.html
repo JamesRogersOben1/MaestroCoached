@@ -551,18 +551,19 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
 (async function(){
-  const sb = supabase.createClient(
-    "https://wswqbmgzhostkquztdpj.supabase.co",
-    "sb_publishable_dqElO37xH5wQbc3EtYnHSA_dHAF_58k"
-  );
   const grid = document.getElementById('campGrid');
-  const { data: camps, error } = await sb.from('camps').select('*').order('sort_order');
-  if (error || !camps || camps.length === 0){
-    grid.innerHTML = '<div class="camp-card"><p style="color:#8c8c86;font-size:13px;">Camp dates coming soon.</p></div>';
-    return;
-  }
+  try {
+    const sb = supabase.createClient(
+      "https://wswqbmgzhostkquztdpj.supabase.co",
+      "sb_publishable_dqElO37xH5wQbc3EtYnHSA_dHAF_58k"
+    );
+    const { data: camps, error } = await sb.from('camps').select('*').order('sort_order');
+    if (error || !camps || camps.length === 0){
+      grid.innerHTML = '<div class="camp-card"><p style="color:#8c8c86;font-size:13px;">Camp dates coming soon.</p></div>';
+      return;
+    }
 
-  grid.innerHTML = camps.map(camp => `
+    grid.innerHTML = camps.map(camp => `
     <div class="camp-card">
       <div class="month">${camp.name}${camp.is_full ? ' <span class="full-tag">Full</span>' : ''}</div>
       <h3>${camp.date_range}</h3>
@@ -580,16 +581,24 @@
     </div>
   `).join('');
 
-  window.joinWaitlist = async function(campId){
-    const name = document.getElementById('wlname-'+campId).value.trim();
-    const email = document.getElementById('wlemail-'+campId).value.trim();
-    const statusEl = document.getElementById('wlstatus-'+campId);
-    if (!name || !email){ statusEl.textContent = 'Please fill in both fields.'; statusEl.style.color = 'var(--red)'; return; }
-    const { error } = await sb.from('waitlist').insert({ camp_id: campId, parent_name: name, parent_email: email });
-    if (error){ statusEl.textContent = 'Something went wrong \u2014 please try again.'; statusEl.style.color = 'var(--red)'; return; }
-    statusEl.textContent = "You're on the list \u2014 we'll be in touch if a spot opens up.";
-    statusEl.style.color = 'var(--lime)';
-  };
+    window.joinWaitlist = async function(campId){
+      const sb2 = supabase.createClient(
+        "https://wswqbmgzhostkquztdpj.supabase.co",
+        "sb_publishable_dqElO37xH5wQbc3EtYnHSA_dHAF_58k"
+      );
+      const name = document.getElementById('wlname-'+campId).value.trim();
+      const email = document.getElementById('wlemail-'+campId).value.trim();
+      const statusEl = document.getElementById('wlstatus-'+campId);
+      if (!name || !email){ statusEl.textContent = 'Please fill in both fields.'; statusEl.style.color = 'var(--red)'; return; }
+      const { error } = await sb2.from('waitlist').insert({ camp_id: campId, parent_name: name, parent_email: email });
+      if (error){ statusEl.textContent = 'Something went wrong \u2014 please try again.'; statusEl.style.color = 'var(--red)'; return; }
+      statusEl.textContent = "You're on the list \u2014 we'll be in touch if a spot opens up.";
+      statusEl.style.color = 'var(--lime)';
+    };
+  } catch (err) {
+    grid.innerHTML = '<div class="camp-card"><p style="color:var(--red);font-size:13px;">Unable to load camps right now.</p></div>';
+    console.error('Camps load error:', err);
+  }
 })();
 </script>
 </body>
