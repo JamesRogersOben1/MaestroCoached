@@ -111,6 +111,12 @@
 
   <button id="submitBtn">Save session</button>
   <div id="saveStatus"></div>
+
+  <div style="margin-top:48px;padding-top:32px;border-top:1px solid var(--line);">
+    <h2 class="display" style="font-size:22px;margin-bottom:4px;">Camps & waiting lists</h2>
+    <p style="font-size:13px;color:#8c8c86;margin-bottom:16px;">Mark a camp full to switch it to waiting-list mode on the site.</p>
+    <div id="campsManage"></div>
+  </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -158,6 +164,49 @@ async function showForm(){
   select.innerHTML = players.map(p => '<option value="'+p.id+'">'+p.name+'</option>').join('');
   document.getElementById('sessionDate').valueAsDate = new Date();
   await updateBlockPanel();
+  await loadCampsPanel();
+}
+
+async function loadCampsPanel(){
+  const container = document.getElementById('campsManage');
+  const { data: camps } = await sb.from('camps').select('*').order('sort_order');
+  if (!camps || camps.length === 0){ container.innerHTML = '<p style="font-size:13px;color:#8c8c86;">No camps set up yet.</p>'; return; }
+
+  let html = '';
+  for (const camp of camps){
+    const { data: waitlist } = await sb.from('waitlist').select('*').eq('camp_id', camp.id).order('created_at');
+    html += `
+      <div style="background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px 18px;margin-bottom:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <b style="font-size:14px;">${camp.name}</b>
+            <span style="font-size:12px;color:#8c8c86;margin-left:8px;">${camp.date_range}</span>
+          </div>
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#c9c9c2;cursor:pointer;">
+            <input type="checkbox" ${camp.is_full ? 'checked' : ''} onchange="window.toggleCampFull('${camp.id}', this.checked)">
+            Mark full
+          </label>
+        </div>
+        ${waitlist && waitlist.length > 0 ? `
+          <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--line);">
+            <p style="font-size:11px;color:#8c8c86;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:8px;">Waiting list (${waitlist.length})</p>
+            ${waitlist.map((w, i) => `
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:13px;">
+                <span>${i+1}. ${w.parent_name} ${w.invited ? '<span style="color:var(--lime);font-size:11px;">invited</span>' : ''}</span>
+                <a href="mailto:${w.parent_email}?subject=A spot has opened up \u2014 ${camp.name}&body=Hi ${w.parent_name},%0D%0A%0D%0AA spot has come up for ${camp.name} (${camp.date_range}) and you're next on the waiting list. Let me know if you'd like to grab it.%0D%0A%0D%0ABest,%0D%0AJames" style="font-size:11px;color:var(--lime);">Invite in</a>
+              </div>
+            `).join('')}
+          </div>
+        ` : '<p style="font-size:12px;color:#8c8c86;margin-top:8px;">No one on the waiting list.</p>'}
+      </div>
+    `;
+  }
+  container.innerHTML = html;
+}
+
+window.toggleCampFull = async function(campId, isFull){
+  await sb.from('camps').update({ is_full: isFull }).eq('id', campId);
+  await loadCampsPanel();
 }
 
 document.getElementById('playerSelect').addEventListener('change', updateBlockPanel);

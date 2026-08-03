@@ -171,6 +171,11 @@
   .camp-card .detail{display:flex;justify-content:space-between;padding:9px 0;border-top:1px solid var(--line);font-size:14px;color:#c9c9c2;}
   .camp-card .detail:first-of-type{border-top:none;}
   .camp-card .detail b{color:var(--paper);}
+  .camp-card .waitlist-btn{width:100%;margin-top:16px;background:var(--red);color:var(--paper);border:none;padding:12px;font-weight:800;text-transform:uppercase;font-size:12px;letter-spacing:0.03em;cursor:pointer;}
+  .camp-card .full-tag{color:var(--red);font-size:11px;text-transform:uppercase;font-weight:700;letter-spacing:0.04em;}
+  .camp-card .wl-form input{width:100%;padding:10px 12px;background:var(--panel);border:1px solid var(--line);color:var(--paper);margin-top:10px;font-size:13px;}
+  .camp-card .wl-form button{width:100%;margin-top:10px;background:var(--lime);color:var(--ink);border:none;padding:10px;font-weight:800;font-size:12px;text-transform:uppercase;cursor:pointer;}
+  .camp-card .wl-status{font-size:12px;margin-top:8px;color:var(--lime);}
   @media(max-width:860px){
     .camp-grid{grid-template-columns:1fr;}
   }
@@ -399,25 +404,8 @@
     <h2 class="display section-title">School holidays, spent improving.</h2>
     <p class="section-lede">Multi-day camps at Shepherd's Bush, built for players who want to keep progressing over the school holidays.</p>
 
-    <div class="camp-grid">
-      <div class="camp-card">
-        <div class="month">October Half Term</div>
-        <h3>14–18 Oct</h3>
-        <div class="detail"><span>Time</span><b>10:00am – 1:00pm</b></div>
-        <div class="detail"><span>Venue</span><b>Shepherd's Bush</b></div>
-      </div>
-      <div class="camp-card">
-        <div class="month">November Break</div>
-        <h3>26–29 Nov</h3>
-        <div class="detail"><span>Time</span><b>10:00am – 1:00pm</b></div>
-        <div class="detail"><span>Venue</span><b>Shepherd's Bush</b></div>
-      </div>
-      <div class="camp-card">
-        <div class="month">December Break</div>
-        <h3>17–20 Dec</h3>
-        <div class="detail"><span>Time</span><b>10:00am – 1:00pm</b></div>
-        <div class="detail"><span>Venue</span><b>Shepherd's Bush</b></div>
-      </div>
+    <div class="camp-grid" id="campGrid">
+      <div class="camp-card"><p style="color:#8c8c86;font-size:13px;">Loading camps...</p></div>
     </div>
   </div>
 </section>
@@ -560,5 +548,49 @@
 <a class="whatsapp-fab" href="https://wa.me/447848017650?text=Hi%20Maestro%2C%20I'd%20like%20to%20find%20out%20more%20about%20coaching" target="_blank" rel="noopener" aria-label="Message us on WhatsApp">
   <svg viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.148.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12.001 2C6.478 2 2 6.477 2 12c0 1.867.507 3.677 1.469 5.263L2.06 22l4.868-1.398A9.955 9.955 0 0 0 12.001 22C17.524 22 22 17.523 22 12S17.524 2 12.001 2zm0 18.15a8.13 8.13 0 0 1-4.146-1.135l-.297-.176-3.075.883.895-3.005-.194-.309A8.13 8.13 0 0 1 3.85 12c0-4.501 3.65-8.15 8.151-8.15 4.5 0 8.15 3.649 8.15 8.15 0 4.502-3.65 8.15-8.15 8.15z"/></svg>
 </a>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+(async function(){
+  const sb = supabase.createClient(
+    "https://wswqbmgzhostkquztdpj.supabase.co",
+    "sb_publishable_dqElO37xH5wQbc3EtYnHSA_dHAF_58k"
+  );
+  const grid = document.getElementById('campGrid');
+  const { data: camps, error } = await sb.from('camps').select('*').order('sort_order');
+  if (error || !camps || camps.length === 0){
+    grid.innerHTML = '<div class="camp-card"><p style="color:#8c8c86;font-size:13px;">Camp dates coming soon.</p></div>';
+    return;
+  }
+
+  grid.innerHTML = camps.map(camp => `
+    <div class="camp-card">
+      <div class="month">${camp.name}${camp.is_full ? ' <span class="full-tag">Full</span>' : ''}</div>
+      <h3>${camp.date_range}</h3>
+      <div class="detail"><span>Time</span><b>10:00am \u2013 1:00pm</b></div>
+      <div class="detail"><span>Venue</span><b>Shepherd's Bush</b></div>
+      ${camp.is_full ? `
+        <button class="waitlist-btn" onclick="document.getElementById('wl-${camp.id}').style.display='block';this.style.display='none';">Join Waiting List</button>
+        <div class="wl-form" id="wl-${camp.id}" style="display:none;">
+          <input type="text" placeholder="Parent name" id="wlname-${camp.id}">
+          <input type="email" placeholder="Email" id="wlemail-${camp.id}">
+          <button onclick="window.joinWaitlist('${camp.id}')">Add me to the list</button>
+          <div class="wl-status" id="wlstatus-${camp.id}"></div>
+        </div>
+      ` : ''}
+    </div>
+  `).join('');
+
+  window.joinWaitlist = async function(campId){
+    const name = document.getElementById('wlname-'+campId).value.trim();
+    const email = document.getElementById('wlemail-'+campId).value.trim();
+    const statusEl = document.getElementById('wlstatus-'+campId);
+    if (!name || !email){ statusEl.textContent = 'Please fill in both fields.'; statusEl.style.color = 'var(--red)'; return; }
+    const { error } = await sb.from('waitlist').insert({ camp_id: campId, parent_name: name, parent_email: email });
+    if (error){ statusEl.textContent = 'Something went wrong \u2014 please try again.'; statusEl.style.color = 'var(--red)'; return; }
+    statusEl.textContent = "You're on the list \u2014 we'll be in touch if a spot opens up.";
+    statusEl.style.color = 'var(--lime)';
+  };
+})();
+</script>
 </body>
 </html>
