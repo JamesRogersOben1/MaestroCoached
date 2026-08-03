@@ -69,6 +69,13 @@
     <label for="playerName">Player's name</label>
     <input type="text" id="playerName" placeholder="Full name">
 
+    <label for="programmeSelect">Which are you interested in?</label>
+    <select id="programmeSelect" style="width:100%;padding:12px 14px;background:var(--panel);border:1px solid var(--line);color:var(--paper);border-radius:4px;font-size:14px;font-family:inherit;">
+      <option value="1-2-1 Programme">1-2-1 Programme</option>
+      <option value="Sunday Service">Sunday Service (Elite Group Sessions)</option>
+      <option value="Not sure yet">Not sure yet</option>
+    </select>
+
     <label for="dobInput">Player's date of birth</label>
     <input type="text" id="dobInput" placeholder="DD/MM/YYYY">
 
@@ -122,12 +129,22 @@ const SUPABASE_URL = "https://wswqbmgzhostkquztdpj.supabase.co";
 const SUPABASE_KEY = "sb_publishable_dqElO37xH5wQbc3EtYnHSA_dHAF_58k";
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+const urlParams = new URLSearchParams(window.location.search);
+const programmeParam = urlParams.get('programme');
+if (programmeParam){
+  const select = document.getElementById('programmeSelect');
+  for (const opt of select.options){
+    if (opt.value === programmeParam) { select.value = programmeParam; break; }
+  }
+}
+
 document.getElementById('submitBtn').addEventListener('click', async () => {
   const btn = document.getElementById('submitBtn');
   const statusEl = document.getElementById('formStatus');
   statusEl.innerHTML = '';
 
   const name = document.getElementById('playerName').value.trim();
+  const programme = document.getElementById('programmeSelect').value;
   const dob = document.getElementById('dobInput').value.trim();
   const ageGroup = document.getElementById('ageGroupInput').value.trim();
   const emergencyContactName = document.getElementById('emergencyContactName').value.trim();
@@ -162,7 +179,7 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
   }
 
   const { error } = await sb.from('players').insert({
-    name, parent_email: parentEmail, contact_number: contactNumber || null,
+    name, programme, parent_email: parentEmail, contact_number: contactNumber || null,
     date_of_birth: dobFormatted, age_group: ageGroup || null,
     emergency_contact_name: emergencyContactName || null,
     medical_notes: medical || null,
