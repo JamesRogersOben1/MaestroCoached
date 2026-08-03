@@ -117,6 +117,12 @@
     <p style="font-size:13px;color:#8c8c86;margin-bottom:16px;">Mark a camp full to switch it to waiting-list mode on the site.</p>
     <div id="campsManage"></div>
   </div>
+
+  <div style="margin-top:48px;padding-top:32px;border-top:1px solid var(--line);">
+    <h2 class="display" style="font-size:22px;margin-bottom:4px;">Guide downloads</h2>
+    <p style="font-size:13px;color:#8c8c86;margin-bottom:16px;">Parents who've downloaded The Player's Path — a warm lead list.</p>
+    <div id="guideDownloadsList"></div>
+  </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -165,6 +171,22 @@ async function showForm(){
   document.getElementById('sessionDate').valueAsDate = new Date();
   await updateBlockPanel();
   await loadCampsPanel();
+  await loadGuideDownloads();
+}
+
+async function loadGuideDownloads(){
+  const container = document.getElementById('guideDownloadsList');
+  const { data: downloads, error } = await sb.from('guide_downloads').select('*').order('created_at', { ascending: false });
+  if (error || !downloads || downloads.length === 0){
+    container.innerHTML = '<p style="font-size:13px;color:#8c8c86;">No downloads yet.</p>';
+    return;
+  }
+  container.innerHTML = downloads.map(d => `
+    <div style="display:flex;justify-content:space-between;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:10px 14px;margin-bottom:8px;font-size:13px;">
+      <div><b>${d.name}</b> <span style="color:#8c8c86;margin-left:8px;">${d.email}</span></div>
+      <a href="mailto:${d.email}" style="color:var(--lime);font-size:12px;">Email</a>
+    </div>
+  `).join('');
 }
 
 async function loadCampsPanel(){

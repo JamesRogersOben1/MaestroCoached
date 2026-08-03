@@ -237,6 +237,10 @@
   .guide-inner h2{font-size:clamp(32px,5vw,52px);color:var(--ink);}
   .guide-inner p{color:var(--ink);opacity:0.85;max-width:480px;margin-top:14px;font-size:15px;line-height:1.6;}
   .guide-download .btn-primary{background:var(--ink);color:var(--lime);white-space:nowrap;}
+  .guide-form{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+  .guide-form input{padding:14px 16px;border:none;font-size:14px;min-width:180px;}
+  .guide-form button{background:var(--ink);color:var(--lime);border:none;padding:14px 26px;font-weight:800;font-size:13px;text-transform:uppercase;letter-spacing:0.03em;cursor:pointer;clip-path:polygon(6% 0,100% 0,94% 100%,0% 100%);}
+  .guide-status{font-size:12px;color:var(--ink);font-weight:700;margin-top:8px;}
   @media(max-width:860px){
     .guide-inner{grid-template-columns:1fr;text-align:left;}
   }
@@ -303,6 +307,7 @@
       <a href="#programme">1-2-1 Programme</a>
       <a href="#sunday">Sunday Service</a>
       <a href="#camps">Camps</a>
+      <a href="#guide">Guide</a>
       <a href="#credentials">Coach</a>
       <a href="#contact">Contact</a>
     </div>
@@ -466,15 +471,45 @@
   </div>
 </section>
 
-<section class="guide-download">
+<section class="guide-download" id="guide">
   <div class="wrap guide-inner">
     <div>
       <h2 class="display">Free — The Player's Path</h2>
       <p>A parent's complete guide to elite football development. How to help your child get recognised, developed & signed by a professional club — the 4-corner talent ID model, age-by-age pathways, position-specific guides, solo training plans, and how to support them the right way. Drawn from FA, UEFA, PFSA & 360Scout frameworks.</p>
     </div>
-    <a href="assets/maestro-pathway-guide.pdf" download class="btn btn-primary">Download the Guide</a>
+    <div>
+      <div class="guide-form" id="guideForm">
+        <input type="text" id="guideName" placeholder="Your name">
+        <input type="email" id="guideEmail" placeholder="Email address">
+        <button onclick="window.submitGuideDownload()">Get the Guide</button>
+      </div>
+      <div class="guide-status" id="guideStatus"></div>
+    </div>
   </div>
 </section>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+window.submitGuideDownload = async function(){
+  const name = document.getElementById('guideName').value.trim();
+  const email = document.getElementById('guideEmail').value.trim();
+  const statusEl = document.getElementById('guideStatus');
+  if (!name || !email){ statusEl.textContent = 'Please enter your name and email.'; return; }
+  const sb = supabase.createClient(
+    "https://wswqbmgzhostkquztdpj.supabase.co",
+    "sb_publishable_dqElO37xH5wQbc3EtYnHSA_dHAF_58k"
+  );
+  const { error } = await sb.from('guide_downloads').insert({ name, email });
+  if (error){ statusEl.textContent = 'Something went wrong — please try again.'; return; }
+  statusEl.textContent = 'Thanks! Your download is starting...';
+  const link = document.createElement('a');
+  link.href = 'assets/maestro-pathway-guide.pdf';
+  link.download = 'The-Players-Path-Maestro.pdf';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+</script>
 
 <section class="record">
   <div class="wrap">
