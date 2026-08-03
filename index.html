@@ -231,6 +231,15 @@
   .specialist-name{font-family:'Anton',sans-serif;font-size:30px;text-transform:uppercase;margin-bottom:16px;}
   .specialist-bio p{color:#c9c9c2;font-size:15px;line-height:1.75;margin-bottom:14px;}
   .specialist-bio p:last-child{margin-bottom:0;}
+
+  .guide-download{background:var(--red);}
+  .guide-inner{display:grid;grid-template-columns:1fr auto;gap:40px;align-items:center;}
+  .guide-inner h2{font-size:clamp(32px,5vw,52px);color:var(--ink);}
+  .guide-inner p{color:var(--ink);opacity:0.85;max-width:480px;margin-top:14px;font-size:15px;line-height:1.6;}
+  .guide-download .btn-primary{background:var(--ink);color:var(--lime);white-space:nowrap;}
+  @media(max-width:860px){
+    .guide-inner{grid-template-columns:1fr;text-align:left;}
+  }
   @media(max-width:860px){
     .specialist-card{grid-template-columns:1fr;text-align:center;}
     .specialist-avatar{width:140px;margin:0 auto;}
@@ -454,6 +463,16 @@
         </div>
       </div>
     </div>
+  </div>
+</section>
+
+<section class="guide-download">
+  <div class="wrap guide-inner">
+    <div>
+      <h2 class="display">Free — The Pathway Guide</h2>
+      <p>How clubs really identify talent, what's expected at every age, and how to support your child the right way. A free download for MAESTRO parents, covering the same frameworks used across professional talent identification.</p>
+    </div>
+    <a href="assets/maestro-pathway-guide.pdf" download class="btn btn-primary">Download the Guide</a>
   </div>
 </section>
 
