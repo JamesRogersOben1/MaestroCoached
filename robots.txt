@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /coach.html
+
+Sitemap: https://maestrocoaching.net/sitemap.xml
