@@ -195,6 +195,19 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
     return;
   }
 
+  // Email James the registration details (doesn't block the parent's confirmation)
+  try {
+    fetch('/api/notify-registration', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      keepalive: true,
+      body: JSON.stringify({
+        name, programme, dob, ageGroup, emergencyContactName, contactNumber, parentEmail,
+        medical, experience, goals, additionalNotes, generalConsent, imageConsent
+      })
+    }).catch(() => {});
+  } catch (e) {}
+
   document.getElementById('formWrap').style.display = 'none';
   document.getElementById('successBox').style.display = 'block';
 });
